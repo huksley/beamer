@@ -1,0 +1,56 @@
+service: beamer
+
+# Inspired and based on https://remaster.com/blog/nextjs-lambda-serverless-framework
+provider:
+  name: aws
+  # https://aws.amazon.com/blogs/compute/node-js-18-x-runtime-now-available-in-aws-lambda/
+  runtime: nodejs18.x
+  description: Beamer dev
+  region: eu-west-1
+  deploymentBucket:
+    blockPublicAccess: true
+  deploymentPrefix: serverless
+  logRetentionInDays: 30
+  memorySize: 128
+  versionFunctions: false
+  timeout: 10
+  apiGateway:
+    shouldStartNameWithService: true
+    binaryMediaTypes:
+      - "*/*"
+  environment:
+    NODE_PATH: "/var/runtime/node_modules:/var/task/node_modules:/var/task/.next/standalone/node_modules"
+
+functions:
+  api:
+    handler: server.handler
+    events:
+      - http: ANY /
+      - http: ANY /{proxy+}
+
+plugins:
+  - serverless-esbuild
+  - serverless-domain-manager
+
+package:
+  patterns:
+    - ".next"
+    - "!.next/cache"
+    - "public"
+    - "next.config.js"
+    - "package.json"
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    exclude: "*"
+    keepOutputDirectory: true
+    external:
+      - "next"
+  customDomains:
+    - rest:
+        domainName: beamer.{env:SERVERLESS_DOMAIN, "example.com"}
+        createRoute53Record: true
+        endpointType: edge
+        autoDomain: true
