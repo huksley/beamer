@@ -1,12 +1,11 @@
-import Link from "next/link";
-import Layout from "../components/Layout";
 import { GetStaticPropsResult } from "next";
-import { JSONSafe, Posts, PostType } from "../components/Posts";
-import { GoFile } from "react-icons/go";
-import { PostList } from "../components/PostList";
+import Link from "next/link";
+import Layout from "../../components/Layout";
+import { PostList } from "../../components/PostList";
+import { JSONSafe, Posts, PostType } from "../../components/Posts";
 
 export const getStaticProps = async (): Promise<GetStaticPropsResult<{ posts?: JSONSafe<PostType>[] }>> => {
-  const ids = await Posts.getRecentPostIds();
+  const ids = await Posts.getAllPostIds();
   const posts = (await Promise.all(ids.map((id) => Posts.getPost(id)))).filter((p) => p !== undefined) as PostType[];
   return {
     // Passed to the page component as props
@@ -19,16 +18,13 @@ export const getStaticProps = async (): Promise<GetStaticPropsResult<{ posts?: J
 
 export const Page = ({ posts }: { posts?: JSONSafe<PostType>[] }) => {
   return (
-    <Layout
-      title="Recent posts"
-      description={"All posts recently published." + (posts && posts?.length > 0 ? " Latest is " + posts[0].name : "")}
-    >
+    <Layout title="All posts" description={"Show all " + (posts ? posts.length : "?") + " posts"}>
       <div className="my-6">
         <Link
-          href="/posts/"
+          href="/"
           className="inline-block rounded-md border border-transparent bg-indigo-600 py-3 px-8 text-center font-medium text-white hover:bg-indigo-700"
         >
-          See all posts
+          Recent posts
         </Link>
       </div>
 

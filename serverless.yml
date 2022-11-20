@@ -5,13 +5,12 @@ provider:
   name: aws
   # https://aws.amazon.com/blogs/compute/node-js-18-x-runtime-now-available-in-aws-lambda/
   runtime: nodejs18.x
-  description: Beamer dev
   region: eu-west-1
   deploymentBucket:
     blockPublicAccess: true
   deploymentPrefix: serverless
   logRetentionInDays: 30
-  memorySize: 128
+  memorySize: 2048
   versionFunctions: false
   timeout: 10
   apiGateway:
@@ -19,17 +18,19 @@ provider:
     binaryMediaTypes:
       - "*/*"
   environment:
-    NODE_PATH: "/var/runtime/node_modules:/var/task/node_modules:/var/task/.next/standalone/node_modules"
-
-functions:
-  api:
-    handler: server.handler
-    events:
-      - http: ANY /
-      - http: ANY /{proxy+}
+    NODE_PATH: "/opt/nodejs/node18/node_modules:/opt/nodejs/node_modules:/var/runtime/node_modules:/var/runtime:/var/task:/var/task/.next/standalone/node_modules"
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+       - "s3:PutObject"
+       - "s3:GetObject"
+       - "s3:HeadObject"
+      Resource: "arn:aws:s3:::${env:CACHE_BUCKET, 'example-bucket'}/*"
 
 plugins:
-  - serverless-esbuild
+  - serverless-dotenv-plugin
+  - "@huksley/serverless-esbuild"
+  - serverless-offline
   - serverless-domain-manager
 
 package:
@@ -41,16 +42,37 @@ package:
     - "package.json"
 
 custom:
+  dotenv:
+    path: .env.local
+    logging: true
+    required:
+      env:
+        - CACHE_BUCKET
   esbuild:
     bundle: true
     minify: true
     exclude: "*"
+    concurrency: 5
     keepOutputDirectory: true
+    disableIncremental: true
+    target: "node18"
+    metafile: true
     external:
       - "next"
+      - "@aws-sdk/client-s3"
   customDomains:
     - rest:
-        domainName: beamer.{env:SERVERLESS_DOMAIN, "example.com"}
+        domainName: beamer.${env:SERVERLESS_DOMAIN, "example.com"}
         createRoute53Record: true
         endpointType: edge
         autoDomain: true
+  serverless-offline:
+    - noPrependStageInUrl: true
+    - reloadHandler: true
+
+functions:
+  api:
+    handler: server.serverless
+    events:
+      - http: ANY /
+      - http: ANY /{proxy+}
