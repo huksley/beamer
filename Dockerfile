@@ -4,22 +4,12 @@ FROM node:16-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY . .
-RUN yarn install --frozen-lockfile
-
-# If using npm with a `package-lock.json` comment out above and use below instead
-# RUN npm ci
+RUN npm ci
 
 ENV NEXT_TELEMETRY_DISABLED 1
-
-# Add `ARG` instructions below if you need `NEXT_PUBLIC_` variables
-# then put the value on your fly.toml
-# Example:
-# ARG NEXT_PUBLIC_EXAMPLE="value here"
-
-RUN yarn build
-
-# If using npm comment out above and use below instead
-# RUN npm run build
+ENV NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_KEY
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM node:16-alpine AS runner
@@ -35,7 +25,4 @@ COPY --from=builder /app ./
 
 USER nextjs
 
-CMD ["yarn", "start"]
-
-# If using npm comment out above and use below instead
-# CMD ["npm", "run", "start"]
+CMD ["npm", "run", "start"]
