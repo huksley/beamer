@@ -1,8 +1,7 @@
 import Link from "next/link";
-import Layout from "../components/Layout";
+import { Layout } from "../components/Layout";
 import { GetStaticPropsResult } from "next";
 import { JSONSafe, Posts, PostType } from "../components/Posts";
-import { GoFile } from "react-icons/go";
 import { PostList } from "../components/PostList";
 
 export const getStaticProps = async (): Promise<GetStaticPropsResult<{ posts?: JSONSafe<PostType>[] }>> => {

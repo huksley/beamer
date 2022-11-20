@@ -6,7 +6,7 @@ import {
   GetStaticPropsResult,
 } from "next";
 import Link from "next/link";
-import Layout from "../../components/Layout";
+import { Layout } from "../../components/Layout";
 import { JSONSafe, Posts, PostType } from "../../components/Posts";
 
 // Generates `/posts/1` and `/posts/2`
